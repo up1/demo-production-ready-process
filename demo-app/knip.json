@@ -1,0 +1,3 @@
+{
+  "ignoreDependencies": ["jscpd", "vitest", "@vitest/coverage-v8", "supertest", "@types/supertest"]
+}

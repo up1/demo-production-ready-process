@@ -1,0 +1,4 @@
+Code ที่ AI เขียน พร้อมขึ้น Production หรือยัง? 
+จับผิด Vulnerability
+Hidden Bug
+Technical Debt
