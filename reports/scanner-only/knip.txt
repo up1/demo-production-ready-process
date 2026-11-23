@@ -1,8 +1,0 @@
-Unused devDependencies (5)
-@types/supertest     package.json:24:6
-@vitest/coverage-v8  package.json:25:6
-jscpd                package.json:28:6
-supertest            package.json:30:6
-vitest               package.json:35:6
-Unused exports (1)
-TAX_RATE  src/pricing.ts:1:14
