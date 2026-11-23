@@ -1,0 +1,132 @@
+name: prod-ready
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-ready-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: demo-app
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  security:
+    name: Security (semgrep, gitleaks, npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: demo-app/package-lock.json
+      - run: npm ci
+
+      - name: npm audit (production deps, high+)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: semgrep
+        run: |
+          pipx install semgrep
+          semgrep scan \
+            --config p/javascript --config p/typescript --config p/owasp-top-ten \
+            --metrics=off --error --sarif --output ../semgrep.sarif src
+
+      - name: gitleaks
+        working-directory: .
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest \
+            detect --source /repo --redact --no-banner
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          if-no-files-found: ignore
+
+  quality:
+    name: Bugs (tsc, eslint, tests + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: demo-app/package-lock.json
+      - run: npm ci
+      - name: Type check (strict)
+        run: npx tsc --noEmit --strict
+      - name: ESLint (type-aware + security plugin)
+        run: npx eslint src
+      - name: Tests with coverage
+        run: npx vitest run --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: demo-app/coverage
+          if-no-files-found: ignore
+
+  debt:
+    name: Debt (jscpd, knip)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: demo-app/package-lock.json
+      - run: npm ci
+      - name: Duplication (fail above 3%)
+        run: npx jscpd src --min-tokens 40 --threshold 3 --reporters console
+      - name: Dead code / unused deps
+        run: npx knip
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: demo-app/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  gate:
+    name: Release gate
+    if: always()
+    needs: [security, quality, debt, build]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Verdict
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          if echo "$RESULTS" | grep -Eq 'failure|cancelled|skipped'; then
+            echo "NO-GO: at least one check failed"
+            exit 1
+          fi
+          echo "GO: all automated checks passed"
