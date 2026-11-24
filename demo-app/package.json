@@ -1,14 +1,20 @@
 {
   "name": "order-api",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn src/server.ts",
     "seed": "ts-node src/seed.ts",
-    "fuzz": "npm run build && vitest run tests/fuzz",
-    "fuzz:nightly": "npm run build && FUZZ_RUNS=2000 FUZZ_SEED=$(date +%s) vitest run tests/fuzz"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --coverage",
+    "knip": "knip",
+    "structure": "bash ../scripts/check-structure.sh",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run knip && npm audit --omit=dev && npm run structure",
+    "fuzz": "npm run build && vitest run --config vitest.fuzz.config.mts",
+    "fuzz:nightly": "npm run build && FUZZ_RUNS=2000 FUZZ_SEED=$(date +%s) vitest run --config vitest.fuzz.config.mts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

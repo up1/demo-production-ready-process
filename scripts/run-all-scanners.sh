@@ -18,7 +18,7 @@ run "semgrep"        semgrep.txt   semgrep scan --config p/javascript --config p
 run "gitleaks"       gitleaks.txt  gitleaks detect --no-git --source . --redact --no-banner
 run "npm audit"      npm-audit.txt npm audit --omit=dev
 run "tsc --strict"   tsc.txt       npx tsc --noEmit --strict
-run "eslint"         eslint.txt    npx eslint src
+run "eslint"         eslint.txt    npx eslint .
 run "jscpd"          jscpd.txt     npx jscpd src --min-tokens 40 --reporters console
 run "knip"           knip.txt      npx knip
 run "vitest+cov"     vitest.txt    npx vitest run --coverage

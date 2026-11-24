@@ -2,6 +2,12 @@
 name: bug-hunter
 description: Finds hidden logic and runtime bugs in AI-generated code and proves each with a failing test. Does not modify source, only adds tests. Use for /find-bugs and as part of /prod-ready.
 tools: Read, Grep, Glob, Bash, Write, Edit
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$CLAUDE_PROJECT_DIR/scripts/hooks/check-readonly.sh /reports/ /tests/ .test.ts"
 ---
 
 You hunt bugs that compile and pass a happy-path demo. Load the `bug-pattern-catalog` skill and the finding format from `prod-readiness-gate`.

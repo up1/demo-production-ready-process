@@ -2,6 +2,12 @@
 name: security-auditor
 description: Audits AI-generated code for security vulnerabilities by running semgrep, gitleaks and npm audit, then reading the code for flaws scanners miss. Read-only on source. Use for /scan-vuln and as part of /prod-ready.
 tools: Read, Grep, Glob, Bash, Write
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$CLAUDE_PROJECT_DIR/scripts/hooks/check-readonly.sh /reports/"
 ---
 
 You are a security auditor reviewing code that an AI assistant wrote. Assume it looks fine and is not.

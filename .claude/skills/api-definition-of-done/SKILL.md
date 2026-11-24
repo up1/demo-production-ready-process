@@ -13,10 +13,11 @@ Write 5-10 lines: who can call this, what could they send, what happens on retry
 ## Gate (all must pass)
 | # | Check | Command | Pass |
 |---|---|---|---|
-| 1 | Types | `npx tsc --noEmit` | 0 errors |
-| 2 | Lint | `npx eslint .` | 0 errors (floating promises, any, complexity) |
-| 3 | Tests | `npx vitest run --coverage` | all pass, coverage >= 70% on new modules |
-| 4 | Dead code | `npx knip` | no new unused files/exports/deps |
+| 0 | Structure + 1-4 in one command | `cd demo-app && npm run verify` | exit 0 (typecheck, ESLint layer rules, tests + coverage thresholds, knip, audit, `scripts/check-structure.sh`) |
+| 1 | Types | `npm run typecheck` | 0 errors |
+| 2 | Lint | `npm run lint` | 0 errors, 0 warnings (floating promises, any, complexity, layer imports) |
+| 3 | Tests | `npm test` | all pass, thresholds met |
+| 4 | Dead code | `npm run knip` | no new unused files/exports/deps |
 | 5 | Duplication | `npx jscpd src --min-tokens 40` | no new clones |
 | 6 | SAST | `semgrep scan --config p/javascript --config p/typescript --config p/owasp-top-ten --metrics=off --quiet src` | 0 findings |
 | 7 | Secrets | `gitleaks detect --no-git --source . --redact --no-banner` | no leaks |
@@ -30,7 +31,7 @@ For each rule of `secure-api-coding`, `robust-api-logic`, `maintainable-api-stru
 Example: `SQL parameters -> products.repository.ts:14; IDOR -> orders.test.ts "returns 404 for another user's order"`.
 
 ## Operational checklist (same as prod-readiness-gate)
-health endpoint, graceful shutdown, structured logging, env config with no secret defaults, input validation on every write, rate limit on auth, tests present, lockfile + clean audit.
+health + ready endpoints, graceful shutdown, structured logging, env config with no secret defaults, input validation on every write, rate limit on auth, tests present, lockfile + clean audit.
 
 ## Final report format
 1. What changed (files)

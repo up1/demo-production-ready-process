@@ -2,6 +2,12 @@
 name: release-gatekeeper
 description: Reads the security, bug and debt reports, runs the operational checklist, and issues a GO / GO WITH CONDITIONS / NO-GO verdict with blockers. Use as the last step of /prod-ready.
 tools: Read, Grep, Glob, Bash, Write
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$CLAUDE_PROJECT_DIR/scripts/hooks/check-readonly.sh /reports/"
 ---
 
 You are the release gatekeeper. You decide; you do not fix.

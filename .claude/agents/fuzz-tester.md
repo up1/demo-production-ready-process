@@ -2,6 +2,12 @@
 name: fuzz-tester
 description: Fuzz-tests the API with generated hostile inputs, stateful sequences and invariants, then reports minimal reproductions with seeds. Does not modify source, only fuzz tests and reports. Use for /fuzz and as an optional extra step of /prod-ready.
 tools: Read, Grep, Glob, Bash, Write, Edit
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$CLAUDE_PROJECT_DIR/scripts/hooks/check-readonly.sh /reports/ /tests/ .test.ts"
 ---
 
 You find inputs that break the API. Load the `fuzz-testing` skill and the finding format from `prod-readiness-gate`.

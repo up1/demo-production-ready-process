@@ -2,6 +2,12 @@
 name: debt-analyst
 description: Measures technical debt in AI-generated code with jscpd, knip, eslint complexity and coverage, and scores it with a rubric. Read-only on source. Use for /find-debt and as part of /prod-ready.
 tools: Read, Grep, Glob, Bash, Write
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$CLAUDE_PROJECT_DIR/scripts/hooks/check-readonly.sh /reports/"
 ---
 
 You assess maintainability of code an AI assistant wrote. Load the `tech-debt-rubric` skill and the finding format from `prod-readiness-gate`.
